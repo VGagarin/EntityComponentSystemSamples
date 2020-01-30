@@ -5,22 +5,21 @@ using Unity.Jobs;
 using Unity.Mathematics;
 using Unity.Transforms;
 
-// This system updates all entities in the scene with both a RotationSpeed_SpawnAndRemove and Rotation component.
-
-// ReSharper disable once InconsistentNaming
+// Эта система обновляет все объекты в сцене с помощью компонента Rotation Speed_Spawn и компонента Remove and Rotation.
 public class RotationSpeedSystem_SpawnAndRemove : JobComponentSystem
 {
     // OnUpdate runs on the main thread.
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
         var deltaTime = Time.DeltaTime;
-        
-        // The in keyword on the RotationSpeed_SpawnAndRemove component tells the job scheduler that this job will not write to rotSpeedSpawnAndRemove
+
+        // Ключевое слово in компонента Rotation Speed_Spawn and Remove сообщает планировщику заданий, 
+        // что это задание не будет записываться в rotSpeedSpawnAndRemove
         return Entities
             .WithName("RotationSpeedSystem_SpawnAndRemove")
             .ForEach((ref Rotation rotation, in RotationSpeed_SpawnAndRemove rotSpeedSpawnAndRemove) =>
         {
-            // Rotate something about its up vector at the speed given by RotationSpeed_SpawnAndRemove.
+            // Поверните что-нибудь около его вектора вверх со скоростью, заданной вращением Speed_Spawn, и удалите.
             rotation.Value = math.mul(math.normalize(rotation.Value), quaternion.AxisAngle(math.up(), rotSpeedSpawnAndRemove.RadiansPerSecond * deltaTime));
         }).Schedule(inputDependencies);
     }

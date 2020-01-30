@@ -10,9 +10,9 @@ public class RotationSpeedAuthoring_SpawnAndRemove : MonoBehaviour, IConvertGame
 {
     public float DegreesPerSecond = 360;
 
-    // The MonoBehaviour data is converted to ComponentData on the entity.
-    // We are specifically transforming from a good editor representation of the data (Represented in degrees)
-    // To a good runtime representation (Represented in radians)
+    // Данные MonoBehaviour преобразуются в данные компонента о сущности.
+    // Мы специально преобразуем из хорошего редактора представление данных (представленных в градусах)
+    // К хорошему представлению времени выполнения (представленному в радианах)
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
         dstManager.AddComponentData(entity, new RotationSpeed_SpawnAndRemove { RadiansPerSecond = math.radians(DegreesPerSecond) });

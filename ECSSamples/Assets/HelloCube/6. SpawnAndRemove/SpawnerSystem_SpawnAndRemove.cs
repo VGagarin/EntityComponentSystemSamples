@@ -6,42 +6,46 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Random = Unity.Mathematics.Random;
 
-// JobComponentSystems can run on worker threads.
-// However, creating and removing Entities can only be done on the main thread to prevent race conditions.
-// The system uses an EntityCommandBuffer to defer tasks that can't be done inside the Job.
+// Системы компонентов заданий могут работать в рабочих потоках.
+// Однако создание и удаление сущностей может выполняться только в главном потоке для предотвращения условий гонки.
+// Система использует буфер команд сущности для отложения задач, которые не могут быть выполнены внутри задания.
 
 // ReSharper disable once InconsistentNaming
 [UpdateInGroup(typeof(SimulationSystemGroup))]
-public class SpawnerSystem_SpawnAndRemove : JobComponentSystem
-{
-    // BeginInitializationEntityCommandBufferSystem is used to create a command buffer which will then be played back
-    // when that barrier system executes.
+public class SpawnerSystem_SpawnAndRemove : JobComponentSystem {
+    
+    // BeginInitializationEntityCommandBuffer System используется для создания командного буфера, 
+    // который затем будет воспроизводиться
+    // когда эта система барьеров выполняется.
     //
-    // Though the instantiation command is recorded in the SpawnJob, it's not actually processed (or "played back")
-    // until the corresponding EntityCommandBufferSystem is updated. To ensure that the transform system has a chance
-    // to run on the newly-spawned entities before they're rendered for the first time, the SpawnerSystem_FromEntity
-    // will use the BeginSimulationEntityCommandBufferSystem to play back its commands. This introduces a one-frame lag
-    // between recording the commands and instantiating the entities, but in practice this is usually not noticeable.
-    //
+    // Хотя команда создания экземпляра записана в задании Spawn, она фактически не обрабатывается (или " воспроизводится")
+    // до тех пор, пока не будет обновлена соответствующая буферная система команд сущности. 
+    // Чтобы убедиться, что система преобразования имеет шанс
+    // для запуска на вновь порожденных сущностях до того, как они будут отрисованы в первый раз, объект Spawner System_From
+    // будет использовать команду начать моделирование лица буферной системы, чтобы воспроизвести его команды. 
+    // Это приводит к задержке в один кадр
+    // между записью команд и созданием экземпляров сущностей, но на практике это обычно не заметно.
     BeginInitializationEntityCommandBufferSystem m_EntityCommandBufferSystem;
 
     protected override void OnCreate()
     {
-        // Cache the BeginInitializationEntityCommandBufferSystem in a field, so we don't have to create it every frame
+        // Кэшируйте буферную систему команд Begin Initialization Entity в поле, поэтому нам не нужно создавать ее каждый кадр
         m_EntityCommandBufferSystem = World.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
     }
 
     protected override JobHandle OnUpdate(JobHandle inputDependencies)
     {
-        // Instead of performing structural changes directly, a Job can add a command to an EntityCommandBuffer to
-        // perform such changes on the main thread after the Job has finished. Command buffers allow you to perform
-        // any, potentially costly, calculations on a worker thread, while queuing up the actual insertions and
-        // deletions for later.
+        // Вместо непосредственного выполнения структурных изменений задание может добавить команду в буфер команд сущности, чтобы
+        // выполнить такие изменения в главном потоке после завершения задания. Буферы команд позволяют выполнять
+        // любые потенциально дорогостоящие вычисления в рабочем потоке при постановке в очередь фактических вставок и
+        // удаление на потом.
         var commandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer().ToConcurrent();
-        
-        // Schedule the job that will add Instantiate commands to the EntityCommandBuffer.
-        // Since this job only runs on the first frame, we want to ensure Burst compiles it before running to get the best performance (3rd parameter of WithBurst)
-        // The actual job will be cached once it is compiled (it will only get Burst compiled once).
+
+        // Запланируйте задание, которое добавит команды экземпляра в буфер команд сущности.
+        // Поскольку это задание выполняется только на первом кадре, мы хотим убедиться, что пакет компилирует его перед запуском, 
+        // чтобы получить лучшую производительность (3-й параметр WithBurst)
+        // Фактическое задание будет кэшировано после компиляции (оно будет Компилировано только один раз).
+
         var jobHandle = Entities
             .WithName("SpawnerSystem_SpawnAndRemove")
             .WithBurst(FloatMode.Default, FloatPrecision.Standard, true)
@@ -66,10 +70,10 @@ public class SpawnerSystem_SpawnAndRemove : JobComponentSystem
             commandBuffer.DestroyEntity(entityInQueryIndex, entity);
         }).Schedule(inputDependencies);
 
-        // SpawnJob runs in parallel with no sync point until the barrier system executes.
-        // When the barrier system executes we want to complete the SpawnJob and then play back the commands
-        // (Creating the entities and placing them). We need to tell the barrier system which job it needs to
-        // complete before it can play back the commands.
+        // Задание Spawn выполняется параллельно без точки синхронизации до тех пор, пока не будет выполнена система барьеров.
+        // Когда система барьера выполняется, мы хотим завершить задание спавна, а затем воспроизвести команды
+        // (Создание сущностей и их размещение). Мы должны сказать системе барьеров, какую работу она должна выполнить.
+        // завершить, прежде чем он сможет воспроизвести команды.
         m_EntityCommandBufferSystem.AddJobHandleForProducer(jobHandle);
 
         return jobHandle;

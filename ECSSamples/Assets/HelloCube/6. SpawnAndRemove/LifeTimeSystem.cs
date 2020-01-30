@@ -8,7 +8,7 @@ public struct LifeTime : IComponentData
     public float Value;
 }
 
-// This system updates all entities in the scene with both a RotationSpeed_SpawnAndRemove and Rotation component.
+// Эта система обновляет все объекты в сцене с помощью компонента Rotation Speed_Spawn и компонента Remove and Rotation.
 public class LifeTimeSystem : JobComponentSystem
 {
     EntityCommandBufferSystem m_Barrier;
@@ -18,8 +18,8 @@ public class LifeTimeSystem : JobComponentSystem
         m_Barrier = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
     }
 
-    // Use the [BurstCompile] attribute to compile a job with Burst.
-    // You may see significant speed ups, so try it!
+    // Используйте атрибут [Burst Compile] для компиляции задания с помощью Burst.
+    // Вы можете увидеть значительное ускорение, так что попробуйте!
     [BurstCompile]
     struct LifeTimeJob : IJobForEachWithEntity<LifeTime>
     {

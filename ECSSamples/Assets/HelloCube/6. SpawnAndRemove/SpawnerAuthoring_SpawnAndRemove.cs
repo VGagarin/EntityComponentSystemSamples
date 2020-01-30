@@ -12,20 +12,20 @@ public class SpawnerAuthoring_SpawnAndRemove : MonoBehaviour, IDeclareReferenced
     public int CountX;
     public int CountY;
 
-    // Referenced prefabs have to be declared so that the conversion system knows about them ahead of time
+    // Упомянутые префабы должны быть объявлены так, чтобы система преобразования знала о них заранее
     public void DeclareReferencedPrefabs(List<GameObject> referencedPrefabs)
     {
         referencedPrefabs.Add(Prefab);
     }
 
-    // Lets you convert the editor data representation to the entity optimal runtime representation
+    // Позволяет преобразовать представление данных редактора в представление оптимальной среды выполнения объекта
 
     public void Convert(Entity entity, EntityManager dstManager, GameObjectConversionSystem conversionSystem)
     {
         var spawnerData = new Spawner_SpawnAndRemove
         {
-            // The referenced prefab will be converted due to DeclareReferencedPrefabs.
-            // So here we simply map the game object to an entity reference to that prefab.
+            // Префаб со ссылками будет преобразован из-за объявления префабов со ссылками.
+            // Поэтому здесь мы просто сопоставляем игровой объект с сущностью, относящейся к этой сборке.
             Prefab = conversionSystem.GetPrimaryEntity(Prefab),
             CountX = CountX,
             CountY = CountY,
